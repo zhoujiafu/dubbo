@@ -24,6 +24,7 @@ import org.apache.dubbo.remoting.transport.ChannelHandlerDispatcher;
 
 /**
  * Transporter facade. (API, Static, ThreadSafe)
+ *
  */
 public class Transporters {
 
@@ -75,6 +76,10 @@ public class Transporters {
         return getTransporter().connect(url, handler);
     }
 
+    /**
+     * 加载通讯实现
+     * @return
+     */
     public static Transporter getTransporter() {
         return ExtensionLoader.getExtensionLoader(Transporter.class).getAdaptiveExtension();
     }
