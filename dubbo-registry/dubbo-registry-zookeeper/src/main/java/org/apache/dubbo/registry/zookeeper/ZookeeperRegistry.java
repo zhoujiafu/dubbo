@@ -145,6 +145,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
     public void doSubscribe(final URL url, final NotifyListener listener) {
         try {
             if (ANY_VALUE.equals(url.getServiceInterface())) {
+                // 服务治理订阅注册信息
                 String root = toRootPath();
                 ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.computeIfAbsent(url, k -> new ConcurrentHashMap<>());
                 ChildListener zkListener = listeners.computeIfAbsent(listener, k -> (parentPath, currentChilds) -> {
@@ -168,6 +169,7 @@ public class ZookeeperRegistry extends FailbackRegistry {
                     }
                 }
             } else {
+                // 消费者订阅注册信息
                 List<URL> urls = new ArrayList<>();
                 for (String path : toCategoriesPath(url)) {
                     ConcurrentMap<NotifyListener, ChildListener> listeners = zkListeners.computeIfAbsent(url, k -> new ConcurrentHashMap<>());
