@@ -96,7 +96,8 @@ public class DecodeableRpcInvocation extends RpcInvocation implements Codec, Dec
     }
 
     @Override
-    public Object decode(Channel channel, InputStream input) throws IOException {
+    public Object
+    decode(Channel channel, InputStream input) throws IOException {
         ObjectInput in = CodecSupport.getSerialization(channel.getUrl(), serializationType)
                 .deserialize(channel.getUrl(), input);
 

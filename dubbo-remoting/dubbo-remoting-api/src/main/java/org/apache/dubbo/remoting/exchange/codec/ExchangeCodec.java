@@ -43,6 +43,7 @@ import java.io.InputStream;
 
 /**
  * ExchangeCodec.
+ *  请求、响应主要编码实现
  */
 public class ExchangeCodec extends TelnetCodec {
 
@@ -63,6 +64,13 @@ public class ExchangeCodec extends TelnetCodec {
         return MAGIC;
     }
 
+    /**
+     * 编码
+     * @param channel
+     * @param buffer
+     * @param msg
+     * @throws IOException
+     */
     @Override
     public void encode(Channel channel, ChannelBuffer buffer, Object msg) throws IOException {
         if (msg instanceof Request) {
@@ -74,11 +82,20 @@ public class ExchangeCodec extends TelnetCodec {
         }
     }
 
+    /**
+     * 解码
+     * @param channel
+     * @param buffer
+     * @return
+     * @throws IOException
+     */
     @Override
     public Object decode(Channel channel, ChannelBuffer buffer) throws IOException {
         int readable = buffer.readableBytes();
         byte[] header = new byte[Math.min(readable, HEADER_LENGTH)];
+        // 读取报文头
         buffer.readBytes(header);
+        // 解码
         return decode(channel, buffer, readable, header);
     }
 
@@ -119,6 +136,7 @@ public class ExchangeCodec extends TelnetCodec {
         ChannelBufferInputStream is = new ChannelBufferInputStream(buffer, len);
 
         try {
+            // 解码消息体
             return decodeBody(channel, is, header);
         } finally {
             if (is.available() > 0) {
@@ -208,23 +226,23 @@ public class ExchangeCodec extends TelnetCodec {
     }
 
     /**
-     * request 解码
+     * request 将请求对象编码成字节流
      * @param channel
      * @param buffer
      * @param req
      * @throws IOException
      */
     protected void encodeRequest(Channel channel, ChannelBuffer buffer, Request req) throws IOException {
-        // 获取序列化协议
+        // 获取序列化协议,默认hessian2
         Serialization serialization = getSerialization(channel);
-        // header.
+        // header. 报文头
         byte[] header = new byte[HEADER_LENGTH];
-        // set magic number.
+        // set magic number. 魔法数字
         Bytes.short2bytes(MAGIC, header);
 
         // set request and serialization flag.
         header[2] = (byte) (FLAG_REQUEST | serialization.getContentTypeId());
-
+        // 标记请求是否需要客户端返回
         if (req.isTwoWay()) {
             header[2] |= FLAG_TWOWAY;
         }
@@ -232,7 +250,7 @@ public class ExchangeCodec extends TelnetCodec {
             header[2] |= FLAG_EVENT;
         }
 
-        // set request id.
+        // set request id. 唯一请求id
         Bytes.long2bytes(req.getId(), header, 4);
 
         // encode request data.
@@ -263,23 +281,31 @@ public class ExchangeCodec extends TelnetCodec {
         buffer.writerIndex(savedWriteIndex + HEADER_LENGTH + len);
     }
 
+    /**
+     * 编码响应对象
+     * @param channel
+     * @param buffer
+     * @param res
+     * @throws IOException
+     */
     protected void encodeResponse(Channel channel, ChannelBuffer buffer, Response res) throws IOException {
         int savedWriteIndex = buffer.writerIndex();
         try {
+            // 获取序列化协议
             Serialization serialization = getSerialization(channel);
-            // header.
+            // header. 报文头
             byte[] header = new byte[HEADER_LENGTH];
-            // set magic number.
+            // set magic number. 报文魔法数字
             Bytes.short2bytes(MAGIC, header);
             // set request and serialization flag.
             header[2] = serialization.getContentTypeId();
             if (res.isHeartbeat()) {
                 header[2] |= FLAG_EVENT;
             }
-            // set response status.
+            // set response status. 响应状态
             byte status = res.getStatus();
             header[3] = status;
-            // set request id.
+            // set request id. 请求唯一表示
             Bytes.long2bytes(res.getId(), header, 4);
 
             buffer.writerIndex(savedWriteIndex + HEADER_LENGTH);

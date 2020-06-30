@@ -288,7 +288,7 @@ public class ServiceConfig<T> extends ServiceConfigBase<T> {
 
 
     /**
-     * 服务暴露入库
+     * 服务暴露入口
      */
     protected synchronized void doExport() {
         if (unexported) {
