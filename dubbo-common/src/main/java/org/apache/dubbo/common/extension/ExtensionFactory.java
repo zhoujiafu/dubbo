@@ -25,7 +25,7 @@ public interface ExtensionFactory {
     /**
      * Get extension.
      *
-     * @param type object type.
+     * @param type object type.z
      * @param name object name.
      * @return object instance.
      */
